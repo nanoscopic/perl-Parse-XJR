@@ -28,6 +28,7 @@ xjr_pnode *xjr_pnode__new( xjr_node *node, char *text, char doFree ) {
   pnode->node = node;
   pnode->text = text;
   pnode->doFree = doFree;
+  return pnode;
 }
 xjr_pnode *xjr_pnode__delete( xjr_pnode *pnode ) {
   if( pnode->doFree ) free( pnode->text );
@@ -197,6 +198,7 @@ c_parse(textsv,copyStr,mixedsv)
     //root = parse( (xjr_mempool *) 0, text, len );
     //printf("Parsed and got root %p\n", root );
     xjr_pnode *pnode = xjr_pnode__new( root, text, doCopy );
+    //printf("pnode %p\n", pnode );
     RETVAL = newSVuv( PTR2UV( pnode ) );
   OUTPUT:
     RETVAL
@@ -410,6 +412,72 @@ xjr( nodesv )
   OUTPUT:
     RETVAL
 
+void
+dump( nodesv, depth )
+  SV *nodesv
+  SV *depth
+  PREINIT:
+    xjr_node *node;
+    xjr_pnode *pnode;
+    int len;
+    char *val;
+    xml_output *output;
+  CODE:
+    pnode = cast_magic( nodesv, xjr_pnode * );
+    node = pnode->node;
+    xjr_node__dump( node, SvIV( depth ) );
+
+SV *
+isflag( nodesv )
+  SV *nodesv
+  PREINIT:
+    xjr_node *node;
+    xjr_pnode *pnode;
+    int len;
+    char *val;
+    xml_output *output;
+  CODE:
+    pnode = cast_magic( nodesv, xjr_pnode * );
+    node = pnode->node;
+    if( node->flags & FLAG_FLAG ) {
+      RETVAL = newSVuv( 1 );
+    }
+    else {
+      RETVAL = &PL_sv_undef;
+    }
+  OUTPUT:
+    RETVAL
+
+SV *
+hasflag( nodesv, keysv )
+  SV *nodesv
+  SV *keysv
+  PREINIT:
+    xjr_node *node;
+    xjr_pnode *pnode;
+    STRLEN len;
+    char *key;
+    xjr_node *sub;
+  CODE:
+    pnode = INT2PTR( xjr_pnode *, SvUV( SvRV( nodesv ) ) );
+    node = pnode->node;
+    key = SvPV(keysv, len);
+    sub = xjr_node__get(node, key, len);
+    if( !sub ) {
+      RETVAL = &PL_sv_undef;
+    }
+    else {
+      //xjr_pnode *subPnode = xjr_pnode__new( sub, 0, 0 );
+      if( sub->flags & FLAG_FLAG ) {
+        RETVAL = newSVuv( 1 );
+      }
+      else {
+        RETVAL = &PL_sv_undef;
+      }
+    }
+  OUTPUT:
+    RETVAL
+
 SV *
 jsa( nodesv )
   SV *nodesv
@@ -428,7 +496,7 @@ jsa( nodesv )
     RETVAL = fakeStr( val, len );
   OUTPUT:
     RETVAL
-
+    
 SV *
 keys( nodesv )
   SV *nodesv

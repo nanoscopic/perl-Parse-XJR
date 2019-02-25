@@ -61,8 +61,8 @@ sub gen_msvc {
 sub gen_cc {
   WriteMakefile( @basics,
     LIBS      => ['-lm -lxjr'],
-    LDDLFLAGS => '-shared -L/usr/local/lib',
-    CCFLAGS   => '-I/usr/local/include',
+    LDDLFLAGS => '-shared',
+    CCFLAGS   => '',
   );
 }
 sub gen_solaris {
