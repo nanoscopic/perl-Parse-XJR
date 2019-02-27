@@ -563,7 +563,8 @@ next( nodesv )
     xjr_node *node;
     xjr_pnode *pnode;
   CODE:
-    node = cast_magic( nodesv, xjr_node * );
+    pnode = cast_magic( nodesv, xjr_pnode * );
+    node = pnode->node;
     node = xjr_node__next( node );
     pnode = xjr_pnode__new( node, 0, 0 );
     RETVAL = node ? tied_node( newSVuv( PTR2UV( pnode ) ) ) : &PL_sv_undef;
@@ -577,8 +578,9 @@ firstChild( nodesv )
     xjr_node *node;
     xjr_pnode *pnode;
   CODE:
-    node = cast_magic( nodesv, xjr_node * );
-    node = xjr_node__parent( node );
+    pnode = cast_magic( nodesv, xjr_pnode * );
+    node = pnode->node;
+    node = xjr_node__firstChild( node );
     pnode = xjr_pnode__new( node, 0, 0 );
     RETVAL = node ? tied_node( newSVuv( PTR2UV( pnode ) ) ) : &PL_sv_undef;
   OUTPUT:

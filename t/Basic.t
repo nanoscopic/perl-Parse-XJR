@@ -92,6 +92,21 @@ use_ok( 'Parse::XJR' );
     is( $root->{xml}{item}{name}->value(), 'bob', 'node addition via parse reparsed' );
 }
 
+# test accessing nodes in order
+{
+    my $root = Parse::XJR->new( text => "<a n='10'/><b n='20'/><a n='30'/>" );
+    #$root->dump(20);
+    my $n1 = $root->firstChild();
+    is( $n1->name(), 'a', 'nodes in order; 1' );
+    is( $n1->{n}->value(), 10, 'nodes in order; 1 - value' );
+    my $n2 = $n1->next();
+    is( $n2->name(), 'b', 'nodes in order; 2' );
+    is( $n2->{n}->value(), 20, 'nodes in order; 2 - value' );
+    my $n3 = $n2->next();
+    is( $n3->name(), 'a', 'nodes in order; 3' );
+    is( $n3->{n}->value(), 30, 'nodes in order; 3 - value' );
+}
+
 # test cyclic equalities
 cyclic( "<xml><b><!--test--></b><c/><c/></xml>", 'comment' );
 cyclic( "<xml><a><![CDATA[cdata]]></a></xml>", 'cdata' ); # with cdata
