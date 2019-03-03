@@ -285,8 +285,8 @@ parse(nodesv,textsv)
     parse_onto( (xjr_mempool *)0, text, len, node );
 
 void
-c_setval( mgObjSv, keysv, valsv )
-  SV *mgObjSv
+c_setval( nodesv, keysv, valsv )
+  SV *nodesv
   SV *keysv
   SV *valsv
   PREINIT:
@@ -294,22 +294,25 @@ c_setval( mgObjSv, keysv, valsv )
     xjr_node *sub;
     xjr_pnode *pnode;
   CODE:
-    pnode = INT2PTR( xjr_pnode *, SvUV( SvRV( mgObjSv ) ) );
+    pnode = INT2PTR( xjr_pnode *, SvUV( SvRV( nodesv ) ) );
     node = pnode->node;
     
     STRLEN keylen;
     char *key;
-    key = SvPV(keysv, keylen );
+    key = SvPV( keysv, keylen );
     
     STRLEN vallen;
     char *val;
-    val = SvPV(valsv, vallen);
+    val = SvPV( valsv, vallen );
     
     if( key[0] == '+' ) {
       sub = xjr_node__new( (xjr_mempool *)0, key+1, keylen-1, node );
     }
     else {
       sub = xjr_node__get(node, key, keylen);
+      if( !sub ) {
+        sub = xjr_node__new( (xjr_mempool *)0, key, keylen, node );
+      }
     }
     sub->val = val;
     sub->vallen = vallen;

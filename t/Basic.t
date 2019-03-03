@@ -107,6 +107,13 @@ use_ok( 'Parse::XJR' );
     is( $n3->{n}->value(), 30, 'nodes in order; 3 - value' );
 }
 
+{
+    my $root = Parse::XJR->new( text => "<a/>" );
+    my $a = $root->firstChild();
+    $a->{n} = 10;
+    is( $a->{n}->value(), 10, 'able to add a value' );
+}
+
 # test cyclic equalities
 cyclic( "<xml><b><!--test--></b><c/><c/></xml>", 'comment' );
 cyclic( "<xml><a><![CDATA[cdata]]></a></xml>", 'cdata' ); # with cdata
