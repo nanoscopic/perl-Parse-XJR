@@ -39,13 +39,23 @@ use_ok( 'Parse::XJR' );
 
 {
     my $root = reparse( "<xml><node><![CDATA[<cval>]]></node></xml>" );
-    #print STDERR "xjr:".$root->xjr();
+    print STDERR "xjr:".$root->xjr();
     is( $root->{xml}->{node}->value(), '<cval>', 'reading of cdata' );
 }
 
 {
     my $root = reparse( "<xml><node>a</node><node>b</node></xml>" );
     is( $root->{xml}->{'@node'}->[1]->value(), 'b', 'multiple node array creation' );
+}
+
+{
+    my $xmlSource = "<xml><node>a</node></xml>";
+    my $root = Parse::XJR->new( text => $xmlSource );
+    print STDERR "xjr:".$root->xjr();
+    my $xml = $root->{xml};
+    my $outer = $xml->outerxjr();
+    $outer =~ s/\s+//g;
+    is( $outer, $xmlSource, 'string equality' );
 }
 
 # Note that reparse of mixed does not work since xjr adds spaces
