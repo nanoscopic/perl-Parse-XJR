@@ -39,7 +39,7 @@ use_ok( 'Parse::XJR' );
 
 {
     my $root = reparse( "<xml><node><![CDATA[<cval>]]></node></xml>" );
-    print STDERR "xjr:".$root->xjr();
+    #print STDERR "xjr:".$root->xjr();
     is( $root->{xml}->{node}->value(), '<cval>', 'reading of cdata' );
 }
 
@@ -51,7 +51,7 @@ use_ok( 'Parse::XJR' );
 {
     my $xmlSource = "<xml><node>a</node></xml>";
     my $root = Parse::XJR->new( text => $xmlSource );
-    print STDERR "xjr:".$root->xjr();
+    #print STDERR "xjr:".$root->xjr();
     my $xml = $root->{xml};
     my $outer = $xml->outerxjr();
     $outer =~ s/\s+//g;
@@ -122,6 +122,12 @@ use_ok( 'Parse::XJR' );
     my $a = $root->firstChild();
     $a->{n} = 10;
     is( $a->{n}->value(), 10, 'able to add a value' );
+}
+
+{
+    my $root = Parse::XJR->new( text => "<node att=1><sub>2</sub></node>" );
+    is( $root->{node}{att}->isatt(), 1, 'can detect attributes' );
+    is( $root->{node}{sub}->isatt(), undef, 'can detect non-attributes' );
 }
 
 # test cyclic equalities

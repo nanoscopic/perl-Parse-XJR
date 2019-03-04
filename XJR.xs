@@ -484,6 +484,27 @@ isflag( nodesv )
     RETVAL
 
 SV *
+isatt( nodesv )
+  SV *nodesv
+  PREINIT:
+    xjr_node *node;
+    xjr_pnode *pnode;
+    int len;
+    char *val;
+    xml_output *output;
+  CODE:
+    pnode = cast_magic( nodesv, xjr_pnode * );
+    node = pnode->node;
+    if( node->flags & FLAG_ATT ) {
+      RETVAL = newSVuv( 1 );
+    }
+    else {
+      RETVAL = &PL_sv_undef;
+    }
+  OUTPUT:
+    RETVAL
+
+SV *
 hasflag( nodesv, keysv )
   SV *nodesv
   SV *keysv
