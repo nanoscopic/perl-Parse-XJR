@@ -293,16 +293,17 @@ c_setval( nodesv, keysv, valsv )
     xjr_node *node;
     xjr_node *sub;
     xjr_pnode *pnode;
+    STRLEN keylen;
+    char *key;
+    STRLEN vallen;
+    char *val;
+    char *dup;
+    char *dup2;
   CODE:
     pnode = INT2PTR( xjr_pnode *, SvUV( SvRV( nodesv ) ) );
     node = pnode->node;
     
-    STRLEN keylen;
-    char *key;
     key = SvPV( keysv, keylen );
-    
-    STRLEN vallen;
-    char *val;
     val = SvPV( valsv, vallen );
     
     if( key[0] == '+' ) {
@@ -311,10 +312,15 @@ c_setval( nodesv, keysv, valsv )
     else {
       sub = xjr_node__get(node, key, keylen);
       if( !sub ) {
-        sub = xjr_node__new( (xjr_mempool *)0, key, keylen, node );
+        dup = malloc( keylen );
+        memcpy( dup, key, keylen );
+        sub = xjr_node__new( (xjr_mempool *)0, dup, keylen, node );
       }
     }
-    sub->val = val;
+    
+    dup2 = malloc( vallen );
+    memcpy( dup2, val, vallen );
+    sub->val = dup2;
     sub->vallen = vallen;
 
 void
@@ -421,29 +427,16 @@ outerxjr( nodesv )
   PREINIT:
     xjr_node *node;
     xjr_pnode *pnode;
-    int inner_length;
-    int total_length;
-    char *buffer;
-    char *nodeName;
-    int nodeNameLen;
+    int len;
+    char *val;
     xml_output *output;
   CODE:
     pnode = cast_magic( nodesv, xjr_pnode * );
     node = pnode->node;
-    output = xjr_node__xml( node );
-    inner_length = xml_output__flat_length( output );
-    nodeName = xjr_node__name( node, &nodeNameLen );
-    // <name>...</name> ( 5 extra bytes )
-    total_length = nodeNameLen * 2 // node name repeated twice
-      + 5 // <, >, and /
-      + 1 // ending null byte
-      + inner_length;
-    buffer = malloc( total_length );
-    snprintf( buffer, nodeNameLen + 3, "<%.*s>", nodeNameLen, nodeName );
-    xml_output__flatten_preallocated( output, buffer  + nodeNameLen + 2 );
-    snprintf( buffer + nodeNameLen + 2 + inner_length, nodeNameLen + 4, "</%.*s>", nodeNameLen, nodeName );
+    output = xjr_node__outerxml( node );
+    val = xml_output__flatten( output, &len );
     xml_output__delete( output );
-    RETVAL = fakeStr( buffer, total_length - 1 );
+    RETVAL = fakeStr( val, len );
   OUTPUT:
     RETVAL
 
