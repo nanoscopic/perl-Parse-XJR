@@ -306,8 +306,11 @@ c_setval( nodesv, keysv, valsv )
     key = SvPV( keysv, keylen );
     val = SvPV( valsv, vallen );
     
-    if( key[0] == '+' ) {
-      sub = xjr_node__new( (xjr_mempool *)0, key+1, keylen-1, node );
+    if( key[0] == '+' ) { // this only really makes sense as adding to an array of these things
+      // TODO; do this correctly; fetching a node if it exists, then adding another one on
+      dup = malloc( keylen - 1 );
+      memcpy( dup, key + 1, keylen - 1 );
+      sub = xjr_node__new( (xjr_mempool *)0, dup, keylen-1, node );
     }
     else {
       sub = xjr_node__get(node, key, keylen);
@@ -322,7 +325,8 @@ c_setval( nodesv, keysv, valsv )
     memcpy( dup2, val, vallen );
     sub->val = dup2;
     sub->vallen = vallen;
-
+    sub->flags |= ( FLAG_DYNNAME | FLAG_DYNVAL );
+    
 void
 c_sethash( mgObjSv, keysv, hashsv )
   SV *mgObjSv
@@ -600,8 +604,29 @@ parent( nodesv )
     pnode = cast_magic( nodesv, xjr_pnode * );
     node = pnode->node;
     node = xjr_node__parent( node );
+    if( node ) {
+      pnode = xjr_pnode__new( node, 0, 0 );
+      RETVAL = tied_node( newSVuv( PTR2UV( pnode ) ) );
+    }
+    else {
+      RETVAL = &PL_sv_undef;
+    }
+  OUTPUT:
+    RETVAL
+
+SV *
+clone( nodesv )
+  SV *nodesv
+  PREINIT:
+    xjr_node *node;
+    xjr_pnode *pnode;
+  CODE:
+    pnode = cast_magic( nodesv, xjr_pnode * );
+    node = pnode->node;
+    node = xjr_node__clone( node, NULL );
+    node->flags |= FLAG_ISROOT;
     pnode = xjr_pnode__new( node, 0, 0 );
-    RETVAL = node ? tied_node( newSVuv( PTR2UV( pnode ) ) ) : &PL_sv_undef;
+    RETVAL = tied_node( newSVuv( PTR2UV( pnode ) ) );
   OUTPUT:
     RETVAL
 
