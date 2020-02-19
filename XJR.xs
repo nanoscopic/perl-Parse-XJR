@@ -169,11 +169,21 @@ void sethash( xjr_node *node, char *key1, int keylen1, SV *hashsv ) {
 
 SV *tied_node( SV *data ) {
   HV *hash = newHV();
-  SV *tie = newRV_noinc( data );
+  SV *tie = newRV_noinc( data );//_noinc
+  
+  // make the hash magical
+  //hv_magic(hash, (GV*)tie, PERL_MAGIC_regdata);
+  sv_magic(hash, tie, PERL_MAGIC_tied, NULL, 0);
+  
+  // create an rv, and bless the it into the class
   HV *stash = gv_stashpv("Parse::XJR::Node", GV_ADD);
-  sv_bless(tie, stash);
-  hv_magic(hash, (GV*)tie, PERL_MAGIC_tied);
-  return sv_bless( newRV_noinc(hash), stash );
+  SV *rv = newRV_noinc( hash );
+  
+  sv_bless( rv, stash );
+  
+  MAGIC *mgtable = SvMAGIC( hash );
+  
+  return rv;
 }
 
 MODULE = Parse::XJR         PACKAGE = Parse::XJR
@@ -196,16 +206,15 @@ c_parse(textsv,copyStr,mixedsv)
     //void *parse_full( xjr_mempool *pool, char *input, int len, xjr_node *root, int *endpos, int returnToRoot, int mixedMode )
     root = parse_full( (xjr_mempool *) 0, text, len, 0, 0, 0, mixed );
     //root = parse( (xjr_mempool *) 0, text, len );
-    //printf("Parsed and got root %p\n", root );
     xjr_pnode *pnode = xjr_pnode__new( root, text, doCopy );
-    //printf("pnode %p\n", pnode );
-    RETVAL = newSVuv( PTR2UV( pnode ) );
+    RETVAL = tied_node( newSVuv( PTR2UV( pnode ) ) );
   OUTPUT:
     RETVAL
 
 MODULE = Parse::XJR         PACKAGE = Parse::XJR::Node
 
-#define cast_magic( source, dest_type ) INT2PTR( dest_type, SvUV( SvRV(( (XPVMG*) SvRV( nodesv )->sv_any )->xmg_u.xmg_magic->mg_obj ) ) );  
+#define cast_magic( source, dest_type ) INT2PTR( dest_type, SvIV( SvRV( SvMAGIC( SvRV( source ) )->mg_obj ) ) );  
+
 
 SV *
 FIRSTKEY( nodesv )

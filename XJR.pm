@@ -55,10 +55,9 @@ sub new {
     $copyStr = 1;
   }
   my $mixed = $self->{'mixed'} || 0;
-  my $cnode = Parse::XJR::c_parse( $self->{'text'}, $copyStr, $mixed );
-  
-  my $root = Parse::XJR::Node->new( $cnode );
+  my $root = Parse::XJR::c_parse( $self->{'text'}, $copyStr, $mixed );
   $root->makeroot();
+  
   return $root;
 }
 
